@@ -2,8 +2,9 @@ package com.sergeysav.websitegenerator
 
 class StaticResource(
     private val localPath: String,
-    remotePath: String = localPath
-) : BaseResource(remotePath) {
+    remotePath: String = localPath,
+    lowercase: Boolean = true
+) : BaseResource(remotePath, lowercase) {
 
     override fun Environment.install() = outputResource(localPath)
 
