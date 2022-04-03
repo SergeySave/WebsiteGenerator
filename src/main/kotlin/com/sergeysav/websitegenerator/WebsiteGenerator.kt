@@ -19,9 +19,11 @@ import kotlinx.html.stream.appendHTML
 import java.io.BufferedWriter
 import java.io.File
 import java.io.OutputStream
+import java.nio.file.FileSystem
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.pathString
 
 @Suppress("unused")
 object WebsiteGenerator {
@@ -34,7 +36,7 @@ object WebsiteGenerator {
                 }
             }.start(wait = true)
         } else {
-            val basePath = FileSystems.getDefault().getPath("${args.basePath}/")
+            val basePath = FileSystems.getDefault().getPath(args.basePath)
             if (Files.exists(basePath)) {
                 Files.walk(basePath).use { walk ->
                     walk.sorted(Comparator.reverseOrder())
@@ -78,14 +80,14 @@ object WebsiteGenerator {
 
     private class FileEnvironment(private val basePath: String) : BaseEnvironment() {
         private fun outputTo(pathString: String, inner: OutputStream.()->Unit) {
-            val path = FileSystems.getDefault().getPath("$basePath/$pathString")
+            val path = FileSystems.getDefault().getPath(basePath, pathString)
             Files.createDirectories(path.parent)
             Files.newOutputStream(path).use { stream ->
                 stream.inner()
             }
         }
         private fun writeTo(pathString: String, inner: BufferedWriter.()->Unit) {
-            val path = FileSystems.getDefault().getPath("$basePath/$pathString")
+            val path = FileSystems.getDefault().getPath(basePath, pathString)
             Files.createDirectories(path.parent)
             Files.newBufferedWriter(path).use { writer ->
                 writer.inner()
@@ -110,7 +112,7 @@ object WebsiteGenerator {
 
         override fun Resource.outputResource(localPath: String) = outputTo(path) {
             currentResource = this@outputResource
-            Resource::class.java.classLoader.getResourceAsStream(localPath)!!.copyTo(this)
+            Resource::class.java.classLoader.getResourceAsStream(localPath)?.copyTo(this) ?: error("Resource Not Found. Make sure the resource case matches.")
             currentResource = null
         }
     }
